@@ -19,7 +19,6 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { ActivityModule } from './activity/activity.module';
 import { MailModule } from './mail/mail.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -59,6 +58,6 @@ import { MailModule } from './mail/mail.module';
     MailModule,
   ],
   controllers: [AppController],
-  providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

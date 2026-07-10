@@ -1,11 +1,10 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString } from 'class-validator';
 
-export class CreateCategryDto{
-    @IsString()
-    name!: string;
+export class CreateCategryDto {
+  @IsString()
+  name!: string;
 
-    @IsOptional()
-    @IsString()
-    color?: string;
-
+  @IsOptional()
+  @IsString()
+  color?: string;
 }

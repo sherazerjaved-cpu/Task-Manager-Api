@@ -103,9 +103,7 @@ describe('Task Manager API (e2e)', () => {
 
   describe('Unauthorized', () => {
     it('should return 401 without JWT', async () => {
-      await request(app.getHttpServer())
-        .get('/api/v1/tasks')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/v1/tasks').expect(401);
     });
   });
 

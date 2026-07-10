@@ -10,12 +10,20 @@ import { PassportModule } from '@nestjs/passport';
 import { RolesGuard } from './guards/roles.guards';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name:User.name, schema: UserSchema}]),ConfigModule,
-  PassportModule.register({defaultStrategy: "jwt"}), 
-  JwtModule.registerAsync({inject:[ConfigService], useFactory: (config: ConfigService) =>({
-      secret:config.getOrThrow("JWT_ACCESS_SECRET"), signOptions:{expiresIn: config.getOrThrow("JWT_ACCESS_EXPIRES_IN")}})})],
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    ConfigModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow('JWT_ACCESS_SECRET'),
+        signOptions: { expiresIn: config.getOrThrow('JWT_ACCESS_EXPIRES_IN') },
+      }),
+    }),
+  ],
   providers: [RolesGuard, AuthService, JwtStrategy],
   controllers: [AuthController],
-  exports: [AuthService, JwtModule]
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

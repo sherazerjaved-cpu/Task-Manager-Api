@@ -4,19 +4,19 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guards';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { UsersService } from './users.service';
 
-@Controller({path: 'users', version: '1'})
+@Controller({ path: 'users', version: '1' })
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles("admin")
+@Roles('admin')
 export class UsersController {
-    constructor (private readonly usersService: UsersService){}
+  constructor(private readonly usersService: UsersService) {}
 
-    @Get()
-    findAll(){
-        return this.usersService.findAll()
-    }
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
+  }
 
-    @Delete(":id")
-    deleteUser(@Param("id") id:string){
-        return this.usersService.deleteUser(id)
-    }
+  @Delete(':id')
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
+  }
 }

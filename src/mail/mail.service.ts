@@ -40,12 +40,11 @@ export class MailService {
 
       this.logger.log(`Reminder email sent to ${to}`);
     } catch (error) {
-        if (error instanceof Error) {
-            this.logger.error(`Failed to send email to ${to}`, error.stack);
-        } else {
-            this.logger.error(`Failed to send email to ${to}`,String(error));
-        }
+      if (error instanceof Error) {
+        this.logger.error(`Failed to send email to ${to}`, error.stack);
+      } else {
+        this.logger.error(`Failed to send email to ${to}`, String(error));
+      }
     }
   }
-
 }

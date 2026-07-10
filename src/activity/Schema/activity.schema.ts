@@ -5,14 +5,13 @@ export type ActivityDocument = Activity & Document;
 
 @Schema({ timestamps: true })
 export class Activity {
-
-  @Prop({type: Types.ObjectId, ref: 'Task', required: true})
+  @Prop({ type: Types.ObjectId, ref: 'Task', required: true })
   task!: Types.ObjectId;
 
-  @Prop({type: Types.ObjectId, ref: 'User', required: true})
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user!: Types.ObjectId;
 
-  @Prop({required: true})
+  @Prop({ required: true })
   action!: string;
 
   @Prop()

@@ -5,6 +5,6 @@ import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [AuthModule],
   providers: [TaskGateway],
-  exports: [TaskGateway]
+  exports: [TaskGateway],
 })
 export class WebsocketModule {}
