@@ -8,8 +8,14 @@ export type UserDocument = User & Document;
     @Prop({required:true, unique:true})
     email!:string;
 
-    @Prop({required:true})
+    @Prop({required:true, select:false})
     password!: string;
+
+    @ Prop({enum:["user", "admin"], default:"user"})
+    role!:string;
+    
+    @Prop({select:false, default:null})
+    refreshTokenHash?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

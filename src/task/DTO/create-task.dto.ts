@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString, MinLength } from "class-validator";
+import { IsMongoId, IsString, IsArray, IsOptional, IsEnum, IsDateString, MinLength } from "class-validator";
 import { TaskPriority } from "../Enums/task-priority.enum";
 import { TaskStatus } from "../Enums/task-status.enum";
 
@@ -20,5 +20,16 @@ export class CreateTaskDto{
 
     @IsOptional()
     @IsDateString()
-    duedate?: string;
+    dueDate?: string;
+
+    @IsOptional()
+    @IsMongoId()
+    category?: string;
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tags?: string[];
+
+
 }

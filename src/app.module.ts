@@ -6,11 +6,59 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TaskModule } from './task/task.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ReminderModule } from './reminder/reminder.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthModule } from './health/health.module';
+import { WebsocketModule } from './websocket/websocket.module';
+import { ActivityModule } from './activity/activity.module';
+import { MailModule } from './mail/mail.module';
 
 
 @Module({
-  imports: [ConfigModule.forRoot({isGlobal:true}), MongooseModule.forRoot(process.env.MONGODB_URI!), TaskModule, AuthModule, UsersModule,],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60 * 1000,
+    }),
+
+    ScheduleModule.forRoot(),
+
+    ThrottlerModule.forRoot([
+      {
+        ttl: 15 * 60 * 1000,
+        limit: 100,
+      },
+    ]),
+
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+    }),
+
+    TaskModule,
+    AuthModule,
+    UsersModule,
+    CategoriesModule,
+    ReminderModule,
+    TerminusModule,
+    HealthModule,
+    WebsocketModule,
+    ActivityModule,
+    MailModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {provide: APP_GUARD, useClass: ThrottlerGuard}],
 })
 export class AppModule {}
