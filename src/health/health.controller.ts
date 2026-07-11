@@ -18,7 +18,8 @@ export class HealthController {
   @HealthCheck()
   @ApiOperation({
     summary: 'Check application health',
-    description: 'Returns the health status of the application and MongoDB connection.',
+    description:
+      'Returns the health status of the application and MongoDB connection.',
   })
   @ApiResponse({
     status: 200,

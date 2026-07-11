@@ -1,14 +1,14 @@
 {
   "info": {
-    "_postman_id": "f5b755d0-3f8d-453a-a138-8ce26be6926d",
-    "name": "Task Management API",
+    "_postman_id": "3a9744eb-2498-4629-8c71-e874d91dc6be",
+    "name": "Task Manager API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "55292696",
-    "_collection_link": "https://go.postman.co/collection/55292696-f5b755d0-3f8d-453a-a138-8ce26be6926d?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/55292696-3a9744eb-2498-4629-8c71-e874d91dc6be?source=collection_link"
   },
   "item": [
     {
-      "name": "Auth Requests",
+      "name": "Authentication",
       "item": [
         {
           "name": "Register",
@@ -17,7 +17,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\": \"anthony@test.com\",\r\n    \"password\": \"123456\"\r\n}",
+              "raw": "{\r\n    \"email\": \"johndoe@test.com\",\r\n    \"password\": \"123456\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -25,12 +25,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/auth/register",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/auth/register",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "3000",
               "path": [
                 "auth",
                 "register"
@@ -46,7 +44,200 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.collectionVariables.set(\"token\", pm.response.json().access_token);"
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"accessToken\", response.access_token);\r",
+                  "pm.collectionVariables.set(\"refreshToken\", response.refresh_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"johndoe@test.com\",\r\n    \"password\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTUyMGQxMGEzNGE0NDkwYWQzY2VlNTMiLCJpYXQiOjE3ODM3NzE5NTYsImV4cCI6MTc4NDM3Njc1Nn0.jTuIQcH9e9l3EWmCA8e0YO_--tdSEpe3xE06wDoIpBI\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (Admin)",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/6a520d10a34a4490ad3cee53",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "6a520d10a34a4490ad3cee53"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"categoryId\", response._id);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -66,10 +257,16 @@
               ]
             },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\": \"anthony@test.com\",\r\n    \"password\": \"123456\"\r\n}",
+              "raw": "{\r\n    \"name\": \"Work\",\r\n    \"color\": \"#3B82F6\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -77,68 +274,19 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/auth/login",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/categories",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "3000",
               "path": [
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Task Requests",
-      "item": [
-        {
-          "name": "Create Tasks",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"title\": \"Complete NestJS Assignment\",\r\n  \"description\": \"Finish CRUD, auth, and Postman collection setup\",\r\n  \"status\": \"in-progress\",\r\n  \"priority\": \"high\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:3000/tasks",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "tasks"
+                "categories"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get All Tasks",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
+          "name": "Get Categories",
           "request": {
             "auth": {
               "type": "bearer",
@@ -151,27 +299,61 @@
               ]
             },
             "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"title\": \"Complete NestJS Assignment\",\r\n  \"description\": \"Finish CRUD, auth, and Postman collection setup\",\r\n  \"status\": \"in-progress\",\r\n  \"priority\": \"high\"\r\n}"
-            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:3000/tasks",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/categories",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "3000",
               "path": [
-                "tasks"
+                "categories"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Updated Task",
+          "name": "Get Category By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category",
           "request": {
             "auth": {
               "type": "bearer",
@@ -184,10 +366,16 @@
               ]
             },
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"title\": \"Updated Task\",\r\n    \"priority\": \"high\"\r\n}",
+              "raw": "{\r\n    \"name\": \"Office\",\r\n    \"color\": \"#EF4444\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -195,52 +383,20 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/tasks/6a3af5fab6bdc412d048b2f4",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "3000",
               "path": [
-                "tasks",
-                "6a3af5fab6bdc412d048b2f4"
+                "categories",
+                "{{categoryId}}"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Get Task by Id",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3000/tasks/6a3af5c0b6bdc412d048b2f2",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "3000",
-              "path": [
-                "tasks",
-                "6a3af5c0b6bdc412d048b2f2"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Task",
+          "name": "Delete Category",
           "request": {
             "auth": {
               "type": "bearer",
@@ -253,17 +409,531 @@
               ]
             },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:3000/tasks/6a3af5e1b6bdc412d048b2f3",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "3000",
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", () => {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"taskId\", response._id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Complete Backend Assignment\",\r\n    \"description\": \"Finish Phase 2 API\",\r\n    \"priority\": \"high\",\r\n    \"status\": \"pending\",\r\n    \"dueDate\": \"2026-07-20T00:00:00.000Z\",\r\n    \"category\": \"{{categoryId}}\",\r\n    \"tags\": [\r\n        \"backend\",\r\n        \"nestjs\",\r\n        \"phase2\",\r\n        \"assignment\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tasks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
               "path": [
                 "tasks",
-                "6a3af5e1b6bdc412d048b2f3"
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"Complete Backend Assignment Update\",\r\n    \"status\": \"in-progress\",\r\n    \"priority\": \"medium\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task (Soft Delete)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Task Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", () => {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"commentId\", response._id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"body\": \"This task is almost complete. Working on the remaining features now.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}",
+                "comments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Comments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}",
+                "comments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Upload Attachment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 201\", () => {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"attachmentId\", response._id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "60c97f21-d11c-4e4d-ac4f-1aba0e634cb9",
+                  "src": "/C:/Users/HYE/Downloads/Holiday Home work 2026.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}",
+                "attachments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attachments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}",
+                "attachments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Attachment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Beaer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/attachments/{{attachmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                "{{taskId}}",
+                "attachments",
+                "{{attachmentId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
               ]
             }
           },
@@ -272,9 +942,57 @@
       ]
     }
   ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
   "variable": [
     {
-      "key": "token",
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "taskId",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
+    },
+    {
+      "key": "attachmentId",
       "value": ""
     }
   ]

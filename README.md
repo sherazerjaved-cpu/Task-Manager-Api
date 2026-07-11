@@ -1,98 +1,210 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+Task Manager API
+A production-ready RESTful Task Manager API built with NestJS, MongoDB, and JWT Authentication. This project allows users to securely manage tasks, organize them into categories, receive reminder notifications, and provides administrative features such as user and activity management.
+________________________________________
+Features
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Authentication
+•	User registration
+•	User login
+•	JWT authentication
+•	Refresh token support
+•	Password hashing using bcrypt
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Task Management
+•	Create, update, delete and retrieve tasks
+•	Assign task priority
+•	Track task status
+•	Set due dates
+•	Search tasks
+•	Filter tasks by status
+•	Pagination
+•	Sorting
+•	User-specific task ownership
 
-## Description
+Categories
+•	Create categories
+•	Update categories
+•	Delete categories
+•	Retrieve user categories
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Activity Logs
+•	Automatically records important user actions
+•	Admin-only access to activity history
 
-## Project setup
+User Management
+•	View all users (Admin only)
+•	Delete users (Admin only)
 
-```bash
-$ npm install
-```
+Notifications
+•	Scheduled reminder jobs using Cron
+•	WebSocket notifications for real-time task updates
 
-## Compile and run the project
+Health Monitoring
+•	MongoDB health check using NestJS Terminus
 
-```bash
-# development
-$ npm run start
+API Documentation
+•	Interactive Swagger documentation available at:
+/api/docs
+________________________________________
+Tech Stack
+•	NestJS
+•	Node.js
+•	MongoDB
+•	Mongoose
+•	Passport JWT
+•	bcrypt
+•	Swagger
+•	WebSockets (Socket.IO)
+•	NestJS Schedule (Cron Jobs)
+•	Docker
+•	Jest
+•	GitHub Actions
+________________________________________
+Project Structure
+src
+├── activity
+├── auth
+├── categories
+├── common
+├── config
+├── health
+├── tasks
+├── users
+├── websocket
+├── app.module.ts
+└── main.ts
+________________________________________
+Installation
+Clone the repository
+git clone < https://github.com/sherazerjaved-cpu/Task-Manager-Api>
+Navigate into the project
+cd task-manager-api
+Install dependencies
+npm install
+________________________________________
+Environment Variables
+Create a .env file in the project root.
+Example:
+PORT=3000
 
-# watch mode
-$ npm run start:dev
+MONGODB_URI=your_mongodb_connection_string
 
-# production mode
-$ npm run start:prod
-```
+JWT_SECRET=your_jwt_secret
 
-## Run tests
+JWT_EXPIRES_IN=15m
 
-```bash
-# unit tests
-$ npm run test
+JWT_REFRESH_SECRET=your_refresh_secret
 
-# e2e tests
-$ npm run test:e2e
+JWT_REFRESH_EXPIRES_IN=7d
 
-# test coverage
-$ npm run test:cov
-```
+REMINDER_CRON=*/30 * * * * *
+________________________________________
+Running the Application
+Development
+npm run start:dev
+Production
+npm run build
+npm run start:prod
+________________________________________
+Running with Docker
+docker compose up --build
+________________________________________
+Swagger Documentation
+Once the application is running, open:
+http://localhost:3000/api/docs
+Swagger provides:
+•	API documentation
+•	Request/response schemas
+•	JWT authorization
+•	Interactive endpoint testing
+________________________________________
+Authentication
+Authenticate using:
+POST /api/v1/auth/login
+Copy the returned access token.
+In Swagger:
+1.	Click Authorize
+2.	Paste the JWT token
+3.	Execute protected endpoints
+________________________________________
+API Endpoints
+Authentication
+Method	Endpoint
+POST	/api/v1/auth/register
+POST	/api/v1/auth/login
+POST	/api/v1/auth/refresh
+________________________________________
+Tasks
+Method	Endpoint
+GET	/api/v1/tasks
+GET	/api/v1/tasks/:id
+POST	/api/v1/tasks
+PATCH	/api/v1/tasks/:id
+DELETE	/api/v1/tasks/:id
+________________________________________
+Categories
+Method	Endpoint
+GET	/api/v1/categories
+GET	/api/v1/categories/:id
+POST	/api/v1/categories
+PATCH	/api/v1/categories/:id
+DELETE	/api/v1/categories/:id
+________________________________________
+Users (Admin)
+Method	Endpoint
+GET	/api/v1/users
+DELETE	/api/v1/users/:id
+________________________________________
+Activity (Admin)
+Method	Endpoint
+GET	/api/v1/activity
+________________________________________
+Health
+Method	Endpoint
+GET	/api/v1/health
+________________________________________
+Testing
+Run unit tests
+npm run test
+Run end-to-end tests
+npm run test:e2e
+Run test coverage
+npm run test:cov
+Run linting
+npm run lint
+________________________________________
+Postman Collection
+A Postman collection is included with the repository containing:
+•	Authentication requests
+•	Refresh token flow
+•	Task endpoints
+•	Category endpoints
+•	Activity endpoints
+•	User endpoints
+•	Health endpoint
+________________________________________
+Assignment Features Completed
+•	JWT Authentication
+•	Refresh Tokens
+•	Role-Based Authorization
+•	CRUD Operations
+•	Categories
+•	Activity Logging
+•	Pagination
+•	Filtering
+•	Searching
+•	Sorting
+•	WebSockets
+•	Scheduled Reminder Jobs
+•	Swagger Documentation
+•	Docker Support
+•	GitHub Actions
+•	Health Checks
+•	Unit & E2E Tests
+________________________________________
+Author
+# Author
 
-## Deployment
+**Sherazer Javed**
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Backend Developer | NestJS | Node.js | MongoDB
