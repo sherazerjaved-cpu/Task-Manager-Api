@@ -1,9 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import {
-  HealthCheckService,
-  MongooseHealthIndicator,
-} from '@nestjs/terminus';
+import { HealthCheckService, MongooseHealthIndicator } from '@nestjs/terminus';
 
 describe('HealthController', () => {
   let controller: HealthController;
