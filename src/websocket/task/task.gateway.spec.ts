@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import { TaskGateway } from './task.gateway';
 
 describe('TaskGateway', () => {
@@ -6,7 +7,13 @@ describe('TaskGateway', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TaskGateway],
+      providers: [
+        TaskGateway,
+        {
+          provide: JwtService,
+          useValue: {},
+        },
+      ],
     }).compile();
 
     gateway = module.get<TaskGateway>(TaskGateway);
