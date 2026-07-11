@@ -13,6 +13,7 @@ describe('Task Manager API (e2e)', () => {
     mongoServer = await MongoMemoryServer.create();
 
     process.env.MONGODB_URI = mongoServer.getUri();
+    process.env.REMINDER_CRON = '* * * * *';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
