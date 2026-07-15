@@ -10,21 +10,33 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  redis:
+    image: redis:7-alpine
+    container_name: task-manager-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   api:
     build: .
     container_name: task-manager-api
     restart: unless-stopped
     depends_on:
       - mongo
+      - redis
     ports:
       - "3000:3000"
     env_file:
       - .env
     environment:
       MONGODB_URI: mongodb://mongo:27017/task-manager
+      REDIS_URL: redis://redis:6379
       PORT: 3000
     volumes:
       - ./uploads:/app/uploads
 
 volumes:
   mongo_data:
+  redis_data:

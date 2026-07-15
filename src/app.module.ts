@@ -18,6 +18,9 @@ import { HealthModule } from './health/health.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { ActivityModule } from './activity/activity.module';
 import { MailModule } from './mail/mail.module';
+import KeyvRedis from '@keyv/redis';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
@@ -25,19 +28,37 @@ import { MailModule } from './mail/mail.module';
       isGlobal: true,
     }),
 
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
-      ttl: 60 * 1000,
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        stores: [
+          new KeyvRedis(
+            configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
+          ),
+        ],
+        ttl: 60 * 1000,
+      }),
     }),
 
     ScheduleModule.forRoot(),
 
-    ThrottlerModule.forRoot([
-      {
-        ttl: 15 * 60 * 1000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: 15 * 60 * 1000,
+            limit: 3,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(
+          new Redis(
+            configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
+          ),
+        ),
+      }),
+    }),
 
     MongooseModule.forRootAsync({
       inject: [ConfigService],

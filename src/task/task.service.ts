@@ -126,7 +126,6 @@ export class TaskService {
 
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) {
-      console.log('Returning tasks from cache');
       return cached;
     }
 
@@ -184,7 +183,6 @@ export class TaskService {
         totalPages: Math.ceil(total / Number(limit)),
       },
     };
-
     await this.cacheManager.set(cacheKey, result, 60 * 1000);
     this.taskCacheKeys.add(cacheKey);
     return result;
