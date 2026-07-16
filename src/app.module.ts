@@ -46,7 +46,7 @@ import Redis from 'ioredis';
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const isTest = process.env.NODE_ENV === 'test';
+        const isTest = configService.get<string>('NODE_ENV') === 'test';
 
         return {
           throttlers: [
