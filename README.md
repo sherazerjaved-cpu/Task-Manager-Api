@@ -1,210 +1,379 @@
-Task Manager API
-A production-ready RESTful Task Manager API built with NestJS, MongoDB, and JWT Authentication. This project allows users to securely manage tasks, organize them into categories, receive reminder notifications, and provides administrative features such as user and activity management.
-________________________________________
-Features
+# Task Manager API
 
-Authentication
-•	User registration
-•	User login
-•	JWT authentication
-•	Refresh token support
-•	Password hashing using bcrypt
+A production-ready RESTful Task Manager API built with **NestJS**, **Node.js**, and **MongoDB**. The API enables users to securely manage tasks, organize them into categories, receive scheduled reminder notifications, upload attachments, and provides administrative features such as user and activity management.
 
-Task Management
-•	Create, update, delete and retrieve tasks
-•	Assign task priority
-•	Track task status
-•	Set due dates
-•	Search tasks
-•	Filter tasks by status
-•	Pagination
-•	Sorting
-•	User-specific task ownership
+---
 
-Categories
-•	Create categories
-•	Update categories
-•	Delete categories
-•	Retrieve user categories
+# Features
 
-Activity Logs
-•	Automatically records important user actions
-•	Admin-only access to activity history
+## Authentication
 
-User Management
-•	View all users (Admin only)
-•	Delete users (Admin only)
+* User registration
+* User login
+* JWT authentication
+* Refresh token support
+* Logout
+* Password hashing using bcrypt
 
-Notifications
-•	Scheduled reminder jobs using Cron
-•	WebSocket notifications for real-time task updates
+## Task Management
 
-Health Monitoring
-•	MongoDB health check using NestJS Terminus
+* Create, update, delete, and retrieve tasks
+* User-specific task ownership
+* Task priorities
+* Task status tracking
+* Due dates
+* Soft delete
+* Task comments
+* File attachments
+* Task tags
+* Search tasks
+* Filter tasks
+* Pagination
+* Multi-field sorting
+* Task statistics
 
-API Documentation
-•	Interactive Swagger documentation available at:
-/api/docs
-________________________________________
-Tech Stack
-•	NestJS
-•	Node.js
-•	MongoDB
-•	Mongoose
-•	Passport JWT
-•	bcrypt
-•	Swagger
-•	WebSockets (Socket.IO)
-•	NestJS Schedule (Cron Jobs)
-•	Docker
-•	Jest
-•	GitHub Actions
-________________________________________
-Project Structure
+## Categories
+
+* Create categories
+* Update categories
+* Delete categories
+* Retrieve user categories
+
+## User Management
+
+* View all users (Admin only)
+* Delete users (Admin only)
+
+## Activity Logs
+
+* Automatically records important user actions
+* Admin-only activity history
+* User activity endpoints
+
+## Notifications
+
+* Scheduled reminder jobs using Cron
+* Email reminder support
+* Real-time task updates using WebSockets
+
+## Security & Performance
+
+* JWT Authentication
+* Refresh Tokens
+* Role-Based Access Control (RBAC)
+* Helmet security
+* CORS configuration
+* Request validation
+* Redis-backed caching
+* Redis-backed rate limiting
+
+## Health Monitoring
+
+* MongoDB health check using NestJS Terminus
+
+## API Documentation
+
+* Interactive Swagger documentation
+* JWT Authorization support
+* Request/Response schemas
+
+---
+
+# Tech Stack
+
+* NestJS
+* Node.js
+* TypeScript
+* MongoDB
+* Mongoose
+* Redis
+* Keyv (`@keyv/redis`)
+* Passport JWT
+* bcrypt
+* Swagger
+* Socket.IO (WebSockets)
+* NestJS Schedule (Cron Jobs)
+* Docker
+* Jest
+* GitHub Actions
+
+---
+
+# Project Structure
+
+```text
 src
 ├── activity
 ├── auth
 ├── categories
 ├── common
-├── config
 ├── health
+├── mail
+├── reminder
 ├── tasks
 ├── users
 ├── websocket
 ├── app.module.ts
 └── main.ts
-________________________________________
-Installation
-Clone the repository
-git clone < https://github.com/sherazerjaved-cpu/Task-Manager-Api>
-Navigate into the project
+```
+
+---
+
+# Installation
+
+## Clone the repository
+
+```bash
+git clone https://github.com/sherazerjaved-cpu/Task-Manager-Api.git
+```
+
+## Navigate into the project
+
+```bash
 cd task-manager-api
-Install dependencies
+```
+
+## Install dependencies
+
+```bash
 npm install
-________________________________________
-Environment Variables
-Create a .env file in the project root.
-Example:
+```
+
+---
+
+# Environment Variables
+
+Create a `.env` file in the project root.
+
+```env
 PORT=3000
 
 MONGODB_URI=your_mongodb_connection_string
 
-JWT_SECRET=your_jwt_secret
+REDIS_URL=redis://localhost:6379
 
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=15m
 
 JWT_REFRESH_SECRET=your_refresh_secret
-
 JWT_REFRESH_EXPIRES_IN=7d
 
 REMINDER_CRON=*/30 * * * * *
-________________________________________
-Running the Application
-Development
+
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_USER=your_email
+SMTP_PASS=your_app_password
+SMTP_FROM=your_email
+```
+
+---
+
+# Running the Application
+
+## Development
+
+```bash
 npm run start:dev
-Production
+```
+
+## Production
+
+```bash
 npm run build
 npm run start:prod
-________________________________________
-Running with Docker
+```
+
+---
+
+# Running with Docker
+
+```bash
 docker compose up --build
-________________________________________
-Swagger Documentation
+```
+
+---
+
+# Swagger Documentation
+
 Once the application is running, open:
+
+```
 http://localhost:3000/api/docs
+```
+
 Swagger provides:
-•	API documentation
-•	Request/response schemas
-•	JWT authorization
-•	Interactive endpoint testing
-________________________________________
-Authentication
+
+* Complete API documentation
+* Request and response schemas
+* JWT authentication
+* Interactive endpoint testing
+
+---
+
+# Authentication
+
 Authenticate using:
+
+```
 POST /api/v1/auth/login
+```
+
 Copy the returned access token.
+
 In Swagger:
-1.	Click Authorize
-2.	Paste the JWT token
-3.	Execute protected endpoints
-________________________________________
-API Endpoints
-Authentication
-Method	Endpoint
-POST	/api/v1/auth/register
-POST	/api/v1/auth/login
-POST	/api/v1/auth/refresh
-________________________________________
-Tasks
-Method	Endpoint
-GET	/api/v1/tasks
-GET	/api/v1/tasks/:id
-POST	/api/v1/tasks
-PATCH	/api/v1/tasks/:id
-DELETE	/api/v1/tasks/:id
-________________________________________
-Categories
-Method	Endpoint
-GET	/api/v1/categories
-GET	/api/v1/categories/:id
-POST	/api/v1/categories
-PATCH	/api/v1/categories/:id
-DELETE	/api/v1/categories/:id
-________________________________________
-Users (Admin)
-Method	Endpoint
-GET	/api/v1/users
-DELETE	/api/v1/users/:id
-________________________________________
-Activity (Admin)
-Method	Endpoint
-GET	/api/v1/activity
-________________________________________
-Health
-Method	Endpoint
-GET	/api/v1/health
-________________________________________
-Testing
+
+1. Click **Authorize**
+2. Paste the JWT access token.
+3. Execute protected endpoints.
+
+---
+
+# API Endpoints
+
+## Authentication
+
+| Method | Endpoint              |
+| ------ | --------------------- |
+| POST   | /api/v1/auth/register |
+| POST   | /api/v1/auth/login    |
+| POST   | /api/v1/auth/refresh  |
+| POST   | /api/v1/auth/logout   |
+
+---
+
+## Tasks
+
+| Method | Endpoint            |
+| ------ | ------------------- |
+| GET    | /api/v1/tasks       |
+| GET    | /api/v1/tasks/:id   |
+| POST   | /api/v1/tasks       |
+| PATCH  | /api/v1/tasks/:id   |
+| DELETE | /api/v1/tasks/:id   |
+| GET    | /api/v1/tasks/stats |
+
+---
+
+## Categories
+
+| Method | Endpoint               |
+| ------ | ---------------------- |
+| GET    | /api/v1/categories     |
+| GET    | /api/v1/categories/:id |
+| POST   | /api/v1/categories     |
+| PATCH  | /api/v1/categories/:id |
+| DELETE | /api/v1/categories/:id |
+
+---
+
+## Users (Admin)
+
+| Method | Endpoint          |
+| ------ | ----------------- |
+| GET    | /api/v1/users     |
+| DELETE | /api/v1/users/:id |
+
+---
+
+## Activity
+
+| Method | Endpoint            |
+| ------ | ------------------- |
+| GET    | /api/v1/activity    |
+| GET    | /api/v1/activity/me |
+
+---
+
+## Health
+
+| Method | Endpoint       |
+| ------ | -------------- |
+| GET    | /api/v1/health |
+
+---
+
+# Testing
+
 Run unit tests
-npm run test
+
+```bash
+npm test
+```
+
 Run end-to-end tests
+
+```bash
 npm run test:e2e
+```
+
 Run test coverage
+
+```bash
 npm run test:cov
+```
+
 Run linting
+
+```bash
 npm run lint
-________________________________________
-Postman Collection
+```
+
+Format the project
+
+```bash
+npm run format
+```
+
+---
+
+# Postman Collection
+
 A Postman collection is included with the repository containing:
-•	Authentication requests
-•	Refresh token flow
-•	Task endpoints
-•	Category endpoints
-•	Activity endpoints
-•	User endpoints
-•	Health endpoint
-________________________________________
-Assignment Features Completed
-•	JWT Authentication
-•	Refresh Tokens
-•	Role-Based Authorization
-•	CRUD Operations
-•	Categories
-•	Activity Logging
-•	Pagination
-•	Filtering
-•	Searching
-•	Sorting
-•	WebSockets
-•	Scheduled Reminder Jobs
-•	Swagger Documentation
-•	Docker Support
-•	GitHub Actions
-•	Health Checks
-•	Unit & E2E Tests
-________________________________________
-Author
+
+* Authentication requests
+* Refresh token flow
+* Task endpoints
+* Category endpoints
+* Activity endpoints
+* User endpoints
+* Health endpoint
+
+---
+
+# Features
+
+* JWT Authentication
+* Refresh Tokens
+* Role-Based Access Control (RBAC)
+* CRUD Operations
+* Categories
+* Comments
+* File Attachments
+* Activity Logging
+* Pagination
+* Filtering
+* Searching
+* Multi-field Sorting
+* Task Statistics
+* Redis-backed Caching
+* Redis-backed Rate Limiting
+* Scheduled Reminder Jobs
+* Email Notifications
+* WebSocket Notifications
+* Helmet Security
+* CORS
+* Swagger Documentation
+* Health Checks
+* Docker Support
+* GitHub Actions CI
+* Unit Tests
+* End-to-End Tests
+
+---
+
 # Author
 
 **Sherazer Javed**
 
-Backend Developer | NestJS | Node.js | MongoDB
+Backend Developer | NestJS | Node.js | TypeScript | MongoDB | Redis

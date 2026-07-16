@@ -49,7 +49,7 @@ import Redis from 'ioredis';
         throttlers: [
           {
             ttl: 15 * 60 * 1000,
-            limit: 3,
+            limit: 100,
           },
         ],
         storage: new ThrottlerStorageRedisService(
