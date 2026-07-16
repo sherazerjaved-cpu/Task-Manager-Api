@@ -19,8 +19,6 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { ActivityModule } from './activity/activity.module';
 import { MailModule } from './mail/mail.module';
 import KeyvRedis from '@keyv/redis';
-import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import Redis from 'ioredis';
 
 @Module({
   imports: [
