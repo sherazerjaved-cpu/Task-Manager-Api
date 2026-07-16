@@ -43,21 +43,13 @@ import Redis from 'ioredis';
 
     ScheduleModule.forRoot(),
 
-    ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        throttlers: [
-          {
-            ttl: 15 * 60 * 1000,
-            limit: 100,
-          },
-        ],
-        storage: new ThrottlerStorageRedisService(
-          new Redis(
-            configService.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
-          ),
-        ),
-      }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 15 * 60 * 1000,
+          limit: 100,
+        },
+      ],
     }),
 
     MongooseModule.forRootAsync({
