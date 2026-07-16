@@ -21,8 +21,14 @@ jobs:
         ports:
           - 27017:27017
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
     env:
       MONGODB_URI: mongodb://localhost:27017/task-manager-test
+      REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: test_access_secret
       JWT_REFRESH_SECRET: test_refresh_secret
       JWT_ACCESS_EXPIRES_IN: 15m
