@@ -19,6 +19,8 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { ActivityModule } from './activity/activity.module';
 import { MailModule } from './mail/mail.module';
 import KeyvRedis from '@keyv/redis';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import Redis from 'ioredis';
 
 @Module({
   imports: [
@@ -41,13 +43,30 @@ import KeyvRedis from '@keyv/redis';
 
     ScheduleModule.forRoot(),
 
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 15 * 60 * 1000,
-          limit: 100,
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const isTest = process.env.NODE_ENV === 'test';
+
+        return {
+          throttlers: [
+            {
+              ttl: 15 * 60 * 1000,
+              limit: 100,
+            },
+          ],
+          ...(isTest
+            ? {}
+            : {
+                storage: new ThrottlerStorageRedisService(
+                  new Redis(
+                    configService.get<string>('REDIS_URL') ??
+                      'redis://localhost:6379',
+                  ),
+                ),
+              }),
+        };
+      },
     }),
 
     MongooseModule.forRootAsync({

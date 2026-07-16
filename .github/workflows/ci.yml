@@ -27,6 +27,7 @@ jobs:
           - 6379:6379
 
     env:
+      NODE_ENV: test
       MONGODB_URI: mongodb://localhost:27017/task-manager-test
       REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: test_access_secret

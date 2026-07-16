@@ -10,6 +10,7 @@ describe('Task Manager API (e2e)', () => {
   let mongoServer: MongoMemoryServer;
 
   beforeAll(async () => {
+    process.env.NODE_ENV = 'test';
     mongoServer = await MongoMemoryServer.create();
 
     process.env.MONGODB_URI = mongoServer.getUri();
