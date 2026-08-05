@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { title } from 'process';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -38,12 +39,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     }
 
-    response.status(status).json({
-      statusCode: status,
-      message,
-      error,
-      timestamp: new Date().toISOString(),
-      path: request.originalUrl,
-    });
+    response.status(status)
+    .type("application/problem+json")
+    .json({
+      type: "about:blank",
+      title: error,
+      status,
+      detail: Array.isArray(message) ? message.join(",") : message,
+      instance: request.originalUrl
+    })
+
   }
 }

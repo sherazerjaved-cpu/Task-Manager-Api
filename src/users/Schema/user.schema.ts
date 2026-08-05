@@ -16,6 +16,12 @@ export class User {
 
   @Prop({ select: false, default: null })
   refreshTokenHash?: string;
+
+  @Prop({ default: null })
+  tokenFamily?: string;
+
+  @Prop({ select: false, default: null })
+  currentTokenId?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

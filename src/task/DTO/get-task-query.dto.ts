@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  IsMongoId
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -91,6 +92,16 @@ export class GetTasksQueryDto {
   @IsDateString()
   dueTo?: string;
 
+
+  @ApiPropertyOptional({
+  example: '687abc1234567890abcdef12',
+  description: 'Cursor for keyset pagination',
+  })
+  @IsOptional()
+  @IsMongoId()
+  cursor?: string;
+
+
   @ApiPropertyOptional({
     example: 'nestjs',
     description: 'Filter tasks by tag',
@@ -98,4 +109,13 @@ export class GetTasksQueryDto {
   @IsOptional()
   @IsString()
   tags?: string;
+
+  @ApiPropertyOptional({
+  enum: ['offset', 'cursor'],
+  example: 'offset',
+  description: 'Pagination strategy',
+})
+@IsOptional()
+@IsIn(['offset', 'cursor'])
+pagination?: 'offset' | 'cursor' = 'offset';
 }

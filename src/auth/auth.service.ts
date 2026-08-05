@@ -13,6 +13,7 @@ import { LoginDto } from './DTO/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { StringValue } from 'ms';
 import { RefreshTokenDto } from './DTO/refresh_token.dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -37,9 +38,14 @@ export class AuthService {
     });
   }
 
-  private async generateRefreshToken(user: UserDocument) {
+  private async generateRefreshToken(
+    user: UserDocument,
+    tokenFamily:string,
+    tokenId: string,) {
     const payload = {
       sub: user._id.toString(),
+      family: tokenFamily,
+      jti: tokenId,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
@@ -71,11 +77,20 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException('Invalid Credentials');
     }
+    const tokenFamily = randomUUID();
+    const tokenId = randomUUID();
     const accessToken = await this.generateAccessToken(user);
-    const refreshToken = await this.generateRefreshToken(user);
+    const refreshToken = await this.generateRefreshToken(
+      user, 
+      tokenFamily, 
+      tokenId);
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-    await this.userModel.findByIdAndUpdate(user._id, { refreshTokenHash });
-    return { access_token: accessToken, refresh_token: refreshToken };
+    await this.userModel.findByIdAndUpdate(user._id, 
+      { refreshTokenHash, 
+        tokenFamily,
+      currentTokenId: tokenId});
+    return { access_token: accessToken, 
+      refresh_token: refreshToken };
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
@@ -91,18 +106,60 @@ export class AuthService {
 
     const user = await this.userModel
       .findById(payload.sub)
-      .select('+refreshTokenHash');
-    if (!user || !user.refreshTokenHash) {
+      .select('+refreshTokenHash tokenFamily currentTokenId');
+    
+      if (!user || !user.refreshTokenHash) {
       throw new UnauthorizedException('Refresh Token Not Found');
+    }
+
+    if(payload.family !== user.tokenFamily){
+      await this.userModel.findByIdAndUpdate(user._id, {
+        refreshTokenHash: null,
+        tokenFamily:null,
+        currentTokenId: null
+      })
+      throw new UnauthorizedException("Refresh token reuse detected")
+    }
+
+     if(payload.jti !== user.currentTokenId){
+      await this.userModel.findByIdAndUpdate(user._id, {
+        refreshTokenHash:null,
+        tokenFamily:null,
+        currentTokenId:null
+      })
+      throw new UnauthorizedException('Refresh token reuse detected');
     }
 
     const isValid = await bcrypt.compare(refresh_token, user.refreshTokenHash);
     if (!isValid) {
-      throw new UnauthorizedException('Invalid refresh token');
+      await this.userModel.findByIdAndUpdate(user._id, {
+        refreshTokenHash: null,
+        tokenFamily:null,
+        currentTokenId: null,
+      })
+      throw new UnauthorizedException('Refresh token reuse detected');
     }
 
     const accessToken = await this.generateAccessToken(user);
-    return { access_token: accessToken };
+    const newTokenId = randomUUID();
+    const newRefreshToken = await this.generateRefreshToken(
+      user, 
+      user.tokenFamily!,
+      newTokenId,);
+
+    const refreshTokenHash = await bcrypt.hash(newRefreshToken, 10)
+    await this.userModel.findByIdAndUpdate(user._id, {
+      refreshTokenHash,
+      currentTokenId: newTokenId
+    })
+
+    const updatedUser = await this.userModel
+    .findById(user._id)
+    .select('+refreshTokenHash');
+
+    return { access_token: accessToken,
+      refresh_token: newRefreshToken
+    };
   }
 
   async logout(userId: string) {

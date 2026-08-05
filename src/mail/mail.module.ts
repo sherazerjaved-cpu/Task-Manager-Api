@@ -23,7 +23,7 @@ import { MailService } from './mail.service';
         },
 
         defaults: {
-          from: config.get<string>('SMTP_FROM'),
+          from: `"${config.get<string>('SMTP_FROM_NAME')}" <${config.get<string>('SMTP_FROM_EMAIL')}>`
         },
       }),
     }),

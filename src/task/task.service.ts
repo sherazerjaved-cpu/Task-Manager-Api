@@ -3,10 +3,11 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Task, TaskDocument } from './Schema/task.schema';
-import { Model, Types } from 'mongoose';
+import { Model, Types, PipelineStage } from 'mongoose';
 import { CreateTaskDto } from './DTO/create-task.dto';
 import { UpdateTaskDto } from './DTO/update-task.dto';
 import {
@@ -95,98 +96,282 @@ export class TaskService {
     return task;
   }
 
-  async findAll(userId: string, role: string, query: any) {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      search,
-      sort,
-      sortBy = 'createdAt',
-      order = 'desc',
-      dueFrom,
-      dueTo,
-      tags,
-    } = query;
+async findAll(userId: string, role: string, query: any) {
+  const {
+    page = 1,
+    limit = 10,
+    pagination = 'offset',
+    cursor,
+    status,
+    search,
+    sort,
+    sortBy = 'createdAt',
+    order = 'desc',
+    dueFrom,
+    dueTo,
+    tags,
+  } = query;
 
-    const cacheKey = `tasks:${JSON.stringify({
-      userId,
-      role,
-      page,
-      limit,
-      status,
-      search,
-      sort,
-      sortBy,
-      order,
-      dueFrom,
-      dueTo,
-      tags,
-    })}`;
+  const cacheKey = `tasks:${JSON.stringify({
+    userId,
+    role,
+    page,
+    limit,
+    pagination,
+    cursor,
+    status,
+    search,
+    sort,
+    sortBy,
+    order,
+    dueFrom,
+    dueTo,
+    tags,
+  })}`;
 
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) {
-      return cached;
+  const cached = await this.cacheManager.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const isCursorPagination = pagination === 'cursor';
+
+  const cursorFilter =
+    isCursorPagination && cursor
+      ? {
+          _id: {
+            $gt: new Types.ObjectId(cursor),
+          },
+        }
+      :{};
+
+  const filter: any = {
+    isDeleted: false,
+  };
+
+  if (role !== 'admin') {
+    filter.owner = new Types.ObjectId(userId);
+  }
+
+  if (status) {
+    filter.status = status;
+  }
+
+  if (search) {
+    filter.title = {
+      $regex: search,
+      $options: 'i',
+    };
+  }
+
+  if (dueFrom || dueTo) {
+    filter.dueDate = {};
+
+    if (dueFrom) {
+      filter.dueDate.$gte = new Date(dueFrom);
     }
 
-    const filter: any = { isDeleted: false };
+    if (dueTo) {
+      filter.dueDate.$lte = new Date(dueTo);
+    }
+  }
 
-    if (role !== 'admin') {
-      filter.owner = new Types.ObjectId(userId);
+  if (tags) {
+    filter.tags = {
+      $all: tags.split(','),
+    };
+  }
+
+  const sortObj: Record<string, 1 | -1> = {};
+
+  if(isCursorPagination){
+    sortObj._id = 1;
+  } else if (sort) {
+    const sortFields = sort.split(',');
+
+    sortFields.forEach((field: string) => {
+      const [key, direction] = field.split(':');
+
+      sortObj[key] = direction === 'asc' ? 1 : -1;
+    });
+  } else {
+    sortObj[sortBy] = order === 'asc' ? 1 : -1;
+  }
+
+  const aggregateSort: Record<string, 1 | -1> = {};
+
+  if(isCursorPagination){
+    aggregateSort._id = 1;
+  } else{
+    const priorityDirection = sortObj.priority;
+    delete sortObj.priority;
+
+    if (priorityDirection !== undefined) {
+    aggregateSort.priorityWeight = priorityDirection;
+  }
+
+  Object.assign(aggregateSort, sortObj);
+  aggregateSort._id = 1;
+  }
+
+  if (isCursorPagination 
+    && (sort || sortBy !== 'createdAt' || order !== 'desc')) {
+    throw new BadRequestException(
+      'Cursor pagination does not support custom sorting.',
+    );
+  }
+
+  const skip = (page - 1) * Number(limit);
+
+  const pipeline: PipelineStage[] = [
+    {
+      $match: {
+        ...filter,
+        ...cursorFilter,
+      },
+    },
+    {
+      $addFields: {
+        priorityWeight: {
+          $switch: {
+            branches: [
+              {
+                case: {
+                  $eq: ['$priority', 'low'],
+                },
+                then: 1,
+              },
+              {
+                case: {
+                  $eq: ['$priority', 'medium'],
+                },
+                then: 2,
+              },
+              {
+                case: {
+                  $eq: ['$priority', 'high'],
+                },
+                then: 3,
+              },
+            ],
+            default: 0,
+          },
+        },
+      },
+    },
+    {
+      $sort: aggregateSort,
+    },
+
+    ...(isCursorPagination
+      ? []
+      : [
+          {
+            $skip: skip,
+          },
+        ]),
+
+    {
+      $limit: isCursorPagination
+        ? Number(limit) + 1
+        : Number(limit),
+    },
+
+    {
+      $lookup: {
+        from: 'users',
+        let: {
+          ownerId: '$owner',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$ownerId'],
+              },
+            },
+          },
+          {
+            $project: {
+              password: 0,
+              refreshTokenHash: 0,
+            },
+          },
+        ],
+        as: 'owner',
+      },
+    },
+    {
+      $unwind: {
+        path: '$owner',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'category',
+      },
+    },
+    {
+      $unwind: {
+        path: '$category',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        priorityWeight: 0,
+      },
+    },
+  ];
+
+  const tasks = await this.taskModel.aggregate(pipeline);
+  if (isCursorPagination){
+    const hasNextPage = tasks.length > Number(limit);
+    if (hasNextPage){
+      tasks.pop();
     }
-    if (status) {
-      filter.status = status;
-    }
-    if (search) {
-      filter.title = { $regex: search, $options: 'i' };
-    }
-    if (dueFrom || dueTo) {
-      filter.dueDate = {};
-      if (dueFrom) {
-        filter.dueDate.$gte = new Date(dueFrom);
-      }
-      if (dueTo) {
-        filter.dueDate.$lte = new Date(dueTo);
-      }
-    }
-    if (tags) {
-      filter.tags = {
-        $all: tags.split(','),
-      };
-    }
-    const sortObj: any = {};
-    if (sort) {
-      const sortFields = sort.split(',');
-      sortFields.forEach((field: string) => {
-        const [key, direction] = field.split(':');
-        sortObj[key] = direction === 'asc' ? 1 : -1;
-      });
-    } else {
-      const sortOrder = order === 'asc' ? 1 : -1;
-      sortObj[sortBy] = sortOrder;
-    }
-    const skip = (page - 1) * limit;
-    const tasks = await this.taskModel
-      .find(filter)
-      .populate('owner')
-      .populate('category')
-      .sort(sortObj)
-      .skip(skip)
-      .limit(Number(limit));
-    const total = await this.taskModel.countDocuments(filter);
+
+    const nextCursor = 
+    hasNextPage && tasks.length > 0
+    ? tasks[tasks.length -1]._id.toString()
+    :null;
+
     const result = {
       data: tasks,
       meta: {
-        total,
-        page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
-      },
+        nextCursor
+      }
     };
+
     await this.cacheManager.set(cacheKey, result, 60 * 1000);
     this.taskCacheKeys.add(cacheKey);
+
     return result;
   }
+
+  const total = await this.taskModel.countDocuments(filter);
+
+  const result = {
+    data: tasks,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
+
+  await this.cacheManager.set(cacheKey, result, 60 * 1000);
+  this.taskCacheKeys.add(cacheKey);
+  
+  return result;
+}
 
   async findOne(id: string, userId: string, role: string) {
     const cacheKey = `task:${id}:${userId}:${role}`;
