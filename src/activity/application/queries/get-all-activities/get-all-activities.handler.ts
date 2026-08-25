@@ -13,7 +13,8 @@ export class GetAllActivitiesHandler implements IQueryHandler<GetAllActivitiesQu
     private readonly activityRepository: IActivityRepository,
   ) {}
 
-  async execute() {
+  async execute(query: GetAllActivitiesQuery) {
+    void query;
     return this.activityRepository.findAll();
   }
 }
