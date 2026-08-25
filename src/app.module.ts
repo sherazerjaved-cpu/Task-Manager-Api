@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,7 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ReminderModule } from './reminder/reminder.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TerminusModule } from '@nestjs/terminus';
@@ -22,12 +22,56 @@ import KeyvRedis from '@keyv/redis';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import Redis from 'ioredis';
 import { validationSchema } from './config/validation.schema';
+import { WorkspaceModule } from './workspace/workspace.module';
+import { AuditModule } from './audit/audit.module';
+import { QueuesModule } from './infrastructure/queues/queues.module';
+import { OutboxModule } from './outbox/outbox.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { ExportModule } from './export/export.module';
+import { IdempotencyModule } from './common/idempotency/idempotency.module';
+import { RequestIdMiddleware } from './common/http/request-id.middleware';
+import { LoggerModule } from 'nestjs-pino';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { randomUUID } from 'crypto';
+import { CommonHttpModule } from './common/http/common-http.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { ShutdownModule } from './infrastructure/shutdown/shutdown.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema
+      validationSchema,
+    }),
+
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'test' ? 'silent' : 'info',
+        autoLogging: false,
+
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'req.body.password',
+            'req.body.accessToken',
+            'req.body.refreshToken',
+            'req.body.token',
+            'res.headers["set-cookie"]',
+          ],
+          censor: '[REDACTED]',
+        },
+
+        genReqId: (req) => {
+          const requestId = req.headers['x-request-id'];
+
+          if (typeof requestId === 'string') {
+            return requestId;
+          }
+
+          return randomUUID();
+        },
+      },
     }),
 
     CacheModule.registerAsync({
@@ -49,15 +93,16 @@ import { validationSchema } from './config/validation.schema';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const isTest = configService.get<string>('NODE_ENV') === 'test';
+        const isLoadTest = process.env.LOAD_TEST === 'true';
 
         return {
           throttlers: [
             {
               ttl: 15 * 60 * 1000,
-              limit: 100,
+              limit: isTest || isLoadTest ? 1_000_000 : 100,
             },
           ],
-          ...(isTest
+          ...(isTest || isLoadTest
             ? {}
             : {
                 storage: new ThrottlerStorageRedisService(
@@ -75,6 +120,7 @@ import { validationSchema } from './config/validation.schema';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
+        autoIndex: true,
       }),
     }),
 
@@ -88,8 +134,34 @@ import { validationSchema } from './config/validation.schema';
     WebsocketModule,
     ActivityModule,
     MailModule,
+    WorkspaceModule,
+    AuditModule,
+    QueuesModule,
+    OutboxModule,
+    WebhookModule,
+    ExportModule,
+    IdempotencyModule,
+    CommonHttpModule,
+    MetricsModule,
+    ShutdownModule,
   ],
+
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

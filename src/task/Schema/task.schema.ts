@@ -4,7 +4,10 @@ import { TaskPriority } from '../Enums/task-priority.enum';
 import { TaskStatus } from '../Enums/task-status.enum';
 import mongoose from 'mongoose';
 
-export type TaskDocument = Task & Document;
+export type TaskDocument = Task &
+  Document & {
+    __v: number;
+  };
 
 @Schema({ _id: false })
 export class Comment {
@@ -39,7 +42,7 @@ export class Attachment {
 
 export const AttachmentSchema = SchemaFactory.createForClass(Attachment);
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, optimisticConcurrency: true })
 export class Task {
   @Prop({ required: true, minlength: 3 })
   title!: string;
@@ -79,6 +82,24 @@ export class Task {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   owner!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Workspace', required: true })
+  workspace!: Types.ObjectId;
+
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+  assignees!: Types.ObjectId[];
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
+
+TaskSchema.index({
+  workspace: 1,
+  status: 1,
+  dueDate: 1,
+});
+
+TaskSchema.index({
+  title: 'text',
+  description: 'text',
+  tags: 'text',
+});

@@ -12,7 +12,8 @@ on:
       - master
 
 jobs:
-  build:
+  ci:
+    name: Lint, Typecheck, Test, Coverage, Build & Docker
     runs-on: ubuntu-latest
 
     services:
@@ -20,20 +21,41 @@ jobs:
         image: mongo:8
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+          --health-start-period 10s
+        volumes:
+          - /tmp/mongo-data:/data/db
+        command: >
+          mongod
+          --replSet rs0
+          --bind_ip_all
 
       redis:
-        image: redis:7
+        image: redis:7-alpine
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
 
     env:
       NODE_ENV: test
-      MONGODB_URI: mongodb://localhost:27017/task-manager-test
+
+      MONGODB_URI: mongodb://localhost:27017/task-manager-test?replicaSet=rs0
       REDIS_URL: redis://localhost:6379
+
       JWT_ACCESS_SECRET: test_access_secret
       JWT_REFRESH_SECRET: test_refresh_secret
+
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
+
       CRON_EXPRESSION: "0 0 * * * *"
 
     steps:
@@ -43,20 +65,114 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Initialize MongoDB replica set
+        run: |
+          MONGO_CONTAINER=$(docker ps -q --filter ancestor=mongo:8)
+
+          docker exec "$MONGO_CONTAINER" \
+            mongosh --host localhost:27017 --eval '
+              try {
+                rs.status();
+                print("MongoDB replica set already initialized");
+              } catch (error) {
+                rs.initiate({
+                  _id: "rs0",
+                  members: [
+                    { _id: 0, host: "localhost:27017" }
+                  ]
+                });
+              }
+            '
+
+      - name: Wait for MongoDB replica set
+        run: |
+          for i in {1..30}; do
+            if docker exec "$(docker ps -q --filter ancestor=mongo:8)" \
+              mongosh --quiet --host localhost:27017 \
+              --eval 'rs.status().myState === 1' | grep true; then
+              echo "MongoDB replica set is PRIMARY"
+              exit 0
+            fi
+
+            echo "Waiting for MongoDB replica set..."
+            sleep 2
+          done
+
+          echo "MongoDB replica set failed to become PRIMARY"
+          exit 1
+
       - name: Run linter
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm test
+      - name: Run typecheck
+        run: npm run typecheck
 
-      - name: Run e2e tests
-        run: npm run test:e2e
+      - name: Run unit tests with coverage
+        run: npm run test:cov
+
+      - name: Run integration tests
+        run: npm run test:integration -- --runInBand
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --runInBand
+
+      - name: Enforce coverage threshold
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            const summaryPath = 'coverage/coverage-summary.json';
+
+            if (!fs.existsSync(summaryPath)) {
+              console.error('Coverage summary not found:', summaryPath);
+              process.exit(1);
+            }
+
+            const summary = JSON.parse(
+              fs.readFileSync(summaryPath, 'utf8')
+            );
+
+            const total = summary.total;
+
+            const metrics = {
+              lines: total.lines.pct,
+              statements: total.statements.pct,
+              functions: total.functions.pct,
+              branches: total.branches.pct
+            };
+
+            console.log('Coverage:', metrics);
+
+            const minimum = 85;
+
+            for (const [metric, value] of Object.entries(metrics)) {
+              if (value < minimum) {
+                console.error(
+                  metric +
+                  ' coverage (' +
+                  value +
+                  '%) is below required ' +
+                  minimum +
+                  '%'
+                );
+
+                process.exit(1);
+              }
+            }
+
+            console.log(
+              'Coverage gate passed: all metrics are >= 85%'
+            );
+          "
 
       - name: Build project
         run: npm run build
+
+      - name: Build Docker image
+        run: docker build --tag task-manager-api:ci .

@@ -13,6 +13,9 @@ export class Category {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   owner!: mongoose.Types.ObjectId;
+
+  @Prop()
+  __v!: number;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
