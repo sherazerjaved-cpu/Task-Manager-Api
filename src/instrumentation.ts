@@ -28,6 +28,6 @@ const sdk = new NodeSDK({
 
 sdk.start();
 
-process.on('SIGTERM', async () => {
-  await sdk.shutdown();
+process.on('SIGTERM', () => {
+  void sdk.shutdown();
 });
