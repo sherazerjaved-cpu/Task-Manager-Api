@@ -50,13 +50,23 @@ jobs:
       MONGODB_URI: mongodb://localhost:27017/task-manager-test?replicaSet=rs0
       REDIS_URL: redis://localhost:6379
 
+      JWT_SECRET: test-jwt-secret
       JWT_ACCESS_SECRET: test_access_secret
       JWT_REFRESH_SECRET: test_refresh_secret
 
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
 
-      CRON_EXPRESSION: "0 0 * * * *"
+      REMINDER_CRON: "* * * * *"
+
+      SMTP_HOST: localhost
+      SMTP_PORT: 1025
+      SMTP_USER: test
+      SMTP_PASS: test
+      SMTP_FROM_EMAIL: test@example.com
+      SMTP_FROM_NAME: Task Manager Test
+
+      EXPORT_DOWNLOAD_SECRET: test-export-download-secret-key-32-chars
 
     steps:
       - name: Checkout repository
