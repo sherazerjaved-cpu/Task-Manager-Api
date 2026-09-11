@@ -1,2 +1,0 @@
-id,title,description,status,priority,workspace,owner,dueDate,createdAt,updatedAt
-"""6a8cf94c364248ddc2815e30""","Task, with comma","Description with ""quotes""",pending,high,workspace-123,user-123,"""2026-08-25T02:09:16.724Z""","""2026-08-25T02:09:16.724Z""","""2026-08-25T02:09:16.724Z"""

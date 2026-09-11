@@ -130,7 +130,7 @@ jobs:
         run: npm run test:integration -- --runInBand --forceExit
 
       - name: Run E2E tests
-        run: npm run test:e2e -- --runInBand
+        run: npm run test:e2e -- --runInBand --forceExit
 
       - name: Enforce coverage threshold
         run: |
