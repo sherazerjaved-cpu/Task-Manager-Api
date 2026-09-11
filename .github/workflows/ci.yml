@@ -124,7 +124,7 @@ jobs:
         run: npm run typecheck
 
       - name: Run unit tests with coverage
-        run: npm run test:cov
+        run: npm run test:cov -- --runInBand --detectOpenHandles
 
       - name: Run integration tests
         run: npm run test:integration -- --runInBand
