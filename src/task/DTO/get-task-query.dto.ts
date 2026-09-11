@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  IsMongoId,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -44,7 +45,7 @@ export class GetTasksQueryDto {
 
   @ApiPropertyOptional({
     example: 'assignment',
-    description: 'Search tasks by title',
+    description: 'Search tasks by title, description, or tags',
   })
   @IsOptional()
   @IsString()
@@ -92,10 +93,44 @@ export class GetTasksQueryDto {
   dueTo?: string;
 
   @ApiPropertyOptional({
+    example: '687abc1234567890abcdef12',
+    description: 'Cursor for keyset pagination',
+  })
+  @IsOptional()
+  @IsMongoId()
+  cursor?: string;
+
+  @ApiPropertyOptional({
     example: 'nestjs',
     description: 'Filter tasks by tag',
   })
   @IsOptional()
   @IsString()
   tags?: string;
+
+  @ApiPropertyOptional({
+    enum: ['offset', 'cursor'],
+    example: 'offset',
+    description: 'Pagination strategy',
+  })
+  @IsOptional()
+  @IsIn(['offset', 'cursor'])
+  pagination?: 'offset' | 'cursor' = 'offset';
+
+  @ApiPropertyOptional({
+    example: 'me',
+    description:
+      'Filter tasks by assignee. Use "me" for the authenticated user or provide a user ID.',
+  })
+  @IsOptional()
+  @IsString()
+  assignee?: string;
+
+  @ApiPropertyOptional({
+    example: '6a769ce2c663a9470b6d7558',
+    description: 'Workspace ID',
+  })
+  @IsOptional()
+  @IsMongoId()
+  workspaceId?: string;
 }

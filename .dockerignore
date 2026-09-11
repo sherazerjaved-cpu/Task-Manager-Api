@@ -6,6 +6,11 @@ coverage
 .vscode
 .env
 uploads
+
 npm-debug.log
+npm-debug.log*
+*.log
+
 Dockerfile
 docker-compose.yml
+docker-compose.*.yml

@@ -71,4 +71,11 @@ export class CreateTaskDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiProperty({
+    example: '68a123456789abcdef123456',
+    description: 'Workspace ID the task belongs to',
+  })
+  @IsMongoId()
+  workspaceId!: string;
 }

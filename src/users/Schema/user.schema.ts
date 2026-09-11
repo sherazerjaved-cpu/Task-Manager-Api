@@ -16,6 +16,27 @@ export class User {
 
   @Prop({ select: false, default: null })
   refreshTokenHash?: string;
+
+  @Prop({ default: null })
+  tokenFamily?: string;
+
+  @Prop({ select: false, default: null })
+  currentTokenId?: string;
+
+  @Prop({ default: false })
+  emailVerified!: boolean;
+
+  @Prop({ select: false, default: null })
+  emailVerificationTokenHash?: string;
+
+  @Prop({ select: false, default: null })
+  emailVerificationExpiresAt?: Date;
+
+  @Prop({ select: false, default: null })
+  passwordResetTokenHash?: string;
+
+  @Prop({ select: false, default: null })
+  passwordResetExpiresAt?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

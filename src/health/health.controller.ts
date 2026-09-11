@@ -5,31 +5,61 @@ import {
   MongooseHealthIndicator,
 } from '@nestjs/terminus';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ProblemResponses } from 'src/common/http/problem-responses.decorator';
+import { RedisHealthIndicator } from './indicators/redis.health.indicator';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('Health')
+@ProblemResponses()
+@SkipThrottle()
 @Controller({ path: 'health', version: '1' })
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private readonly mongoose: MongooseHealthIndicator,
+    private readonly redis: RedisHealthIndicator,
   ) {}
 
-  @Get()
+  @Get('live')
   @HealthCheck()
   @ApiOperation({
-    summary: 'Check application health',
+    summary: 'Liveness check',
     description:
-      'Returns the health status of the application and MongoDB connection.',
+      'Checks whether the application process is alive and able to respond to requests.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Application is healthy.',
+    description: 'Application is alive.',
+  })
+  checkLiveness() {
+    return this.health.check([
+      async () => ({
+        application: {
+          status: 'up',
+        },
+      }),
+    ]);
+  }
+
+  @Get('ready')
+  @HealthCheck()
+  @ApiOperation({
+    summary: 'Readiness check',
+    description:
+      'Checks whether the application is ready to receive traffic by verifying MongoDB and Redis connectivity.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application is ready.',
   })
   @ApiResponse({
     status: 503,
-    description: 'One or more health checks failed.',
+    description: 'Application is not ready.',
   })
-  check() {
-    return this.health.check([async () => this.mongoose.pingCheck('mongodb')]);
+  checkReadiness() {
+    return this.health.check([
+      async () => this.mongoose.pingCheck('mongodb'),
+      async () => this.redis.isHealthy('redis'),
+    ]);
   }
 }

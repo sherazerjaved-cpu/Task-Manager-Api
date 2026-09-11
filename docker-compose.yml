@@ -1,14 +1,58 @@
-version: '3.8'
-
 services:
+
   mongo:
     image: mongo:8
     container_name: task-manager-mongo
     restart: unless-stopped
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+
+  mongo-init:
+    image: mongo:8
+    container_name: task-manager-mongo-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    command:
+      - mongosh
+      - mongodb://mongo:27017
+      - --eval
+      - |
+        try {
+          rs.status();
+          print("MongoDB replica set already initialized");
+        } catch (error) {
+          print("Initializing MongoDB replica set...");
+          rs.initiate({
+            _id: "rs0",
+            members: [
+              {
+                _id: 0,
+                host: "mongo:27017"
+              }
+            ]
+          });
+        }
+
 
   redis:
     image: redis:7-alpine
@@ -18,24 +62,92 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: task-manager-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+      - "4317:4317"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:14269/"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: task-manager-api
     restart: unless-stopped
+
     depends_on:
-      - mongo
-      - redis
+      mongo-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
     ports:
       - "3000:3000"
+
     env_file:
       - .env
+
     environment:
-      MONGODB_URI: mongodb://mongo:27017/task-manager
+      MONGODB_URI: mongodb://mongo:27017/task-manager?replicaSet=rs0
       REDIS_URL: redis://redis:6379
       PORT: 3000
+
+      OTEL_SERVICE_NAME: task-manager-api
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+
     volumes:
       - ./uploads:/app/uploads
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:3000/api/v1/health/live"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
 
 volumes:
   mongo_data:

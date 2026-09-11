@@ -8,15 +8,22 @@ import {
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guards';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
-import { UsersService } from './users.service';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { DeleteUserCommand } from './application/commands/delete-user/delete-user.command';
+import { GetUsersQuery } from './application/queries/get-users/get-users.query';
+import { ProblemResponses } from 'src/common/http/problem-responses.decorator';
 
 @ApiTags('Users')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
+@ProblemResponses()
 @Controller({ path: 'users', version: '1' })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -36,7 +43,7 @@ export class UsersController {
     description: 'Forbidden. Admin role required.',
   })
   findAll() {
-    return this.usersService.findAll();
+    return this.queryBus.execute(new GetUsersQuery());
   }
 
   @Delete(':id')
@@ -61,6 +68,6 @@ export class UsersController {
     description: 'User not found.',
   })
   deleteUser(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
+    return this.commandBus.execute(new DeleteUserCommand(id));
   }
 }

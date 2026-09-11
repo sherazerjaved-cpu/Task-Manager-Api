@@ -1,6 +1,5 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ActivityService } from './activity.service';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
@@ -9,13 +8,25 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { QueryBus } from '@nestjs/cqrs';
+
+import { GetUserActivitiesQuery } from './application/queries/get-user-activities/get-user-activities.query';
+import { GetAllActivitiesQuery } from './application/queries/get-all-activities/get-all-activities.query';
+
+import { ProblemResponses } from 'src/common/http/problem-responses.decorator';
 
 @ApiTags('Activity')
-@ApiBearerAuth()
-@Controller('activity')
+@ApiBearerAuth('access-token')
+@ProblemResponses()
+@Controller({
+  path: 'activity',
+  version: '1',
+})
 export class ActivityController {
-  constructor(private readonly activityService: ActivityService) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
     summary: 'Get current user activity',
     description: 'Returns the activity log for the authenticated user.',
@@ -28,12 +39,13 @@ export class ActivityController {
     status: 401,
     description: 'Unauthorized.',
   })
-  @Get('me')
-  @UseGuards(AuthGuard('jwt'))
   getMyActivity(@Req() req: any) {
-    return this.activityService.findByUser(req.user.userId);
+    return this.queryBus.execute(new GetUserActivitiesQuery(req.user.userId));
   }
 
+  @Get()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   @ApiOperation({
     summary: 'Get all activity logs',
     description: 'Returns all activity logs. Admin access only.',
@@ -50,10 +62,7 @@ export class ActivityController {
     status: 403,
     description: 'Forbidden. Admin access required.',
   })
-  @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
   getAllActivity() {
-    return this.activityService.findAll();
+    return this.queryBus.execute(new GetAllActivitiesQuery());
   }
 }
